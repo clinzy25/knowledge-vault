@@ -256,11 +256,19 @@ import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Ingest content into the vault index.")
-    parser.add_argument("--zim", action="store_true", help="Ingest ZIM files")
-    parser.add_argument("--calibre", action="store_true", help="Ingest Calibre books")
-    parser.add_argument("--loose", action="store_true", help="Ingest loose files")
     parser.add_argument("--fresh", action="store_true", help="Clear index before ingesting")
+    parser.add_argument("--path", type=Path, help="Path to the vault directory")
     args = parser.parse_args()
+    PREP_DIR = args.path
+    if not PREP_DIR:
+        print("Error: --path is required")
+        exit(1)
+    if not PREP_DIR.exists():
+        print(f"Error: {PREP_DIR} does not exist")
+        exit(1)
+    if not PREP_DIR.is_dir():
+        print(f"Error: {PREP_DIR} is not a directory")
+        exit(1)
     if args.fresh:
         print("Clearing index...")
         client.index("vault").delete_all_documents()
@@ -292,24 +300,17 @@ if __name__ == "__main__":
         ])
 
     # If no specific ingest option is provided, default to all
-    run_zim = args.zim or (not args.zim and not args.calibre and not args.loose)
-    run_calibre = args.calibre or (not args.zim and not args.calibre and not args.loose)
-    run_loose = args.loose or (not args.zim and not args.calibre and not args.loose)
-
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
-    if run_zim:
-        # Index each ZIM one at a time (extract, index, delete)
-        for zim_file in sorted(ZIM_DIR.glob("*.zim")):
-            ingest_zim(zim_file)
+    # Index each ZIM one at a time (extract, index, delete)
+    for zim_file in sorted(ZIM_DIR.glob("*.zim")):
+        ingest_zim(zim_file)
 
-    if run_calibre:
-        # Index Calibre books
-        ingest_calibre()
+    # Index Calibre books
+    ingest_calibre()
 
-    if run_loose:
-        # Index loose files
-        ingest_loose_files()
+    # Index loose files
+    ingest_loose_files()
 
     # Final cleanup
     if TEMP_DIR.exists():

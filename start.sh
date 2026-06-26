@@ -36,6 +36,7 @@ cleanup() {
   [ -n "$MEILI_PID" ] && kill "$MEILI_PID"
   [ -n "$HTTP_PID" ] && kill "$HTTP_PID"
   [ -n "$JELLYFIN_PID" ] && kill "$JELLYFIN_PID"
+  sudo systemctl stop jellyfin
   wait
   echo "All services stopped."
   exit 0
@@ -43,6 +44,8 @@ cleanup() {
 
 trap cleanup INT
 sleep 3
+
+sudo mount /dev/sda $VAULT_PATH
 
 # Start Kiwix
 kiwix-serve --port 8888 --address $BIND $VAULT_PATH/zim/*.zim &
@@ -54,10 +57,10 @@ CALIBRE_PID=$!
 
 # Start MeiliSearch
 ./meilisearch --db-path $VAULT_PATH/meili-data --http-addr $BIND:7700 --no-analytics &
+MEILI_PID=$!
 
 # Start Jellyfin
-jellyfin &
-JELLYFIN_PID=$!
+sudo systemctl start jellyfin
 
 # Start landing page server
 python3 -m http.server 5500 --bind $BIND --directory ./ &
