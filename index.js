@@ -6,39 +6,56 @@ const countDiv = document.getElementById("count");
 const paginationDiv = document.getElementById("pagination");
 let debounceTimer;
 let currentPage = 1;
-const perPage = 20;
+const limit = 20;
+const stopWords = [
+  "the",
+  "a",
+  "an",
+  "is",
+  "are",
+  "was",
+  "were",
+  "of",
+  "in",
+  "to",
+  "for",
+  "and",
+  "or",
+  "on",
+];
 
 window.addEventListener("DOMContentLoaded", () => {
   // Set Kiwix link (wikis)
-  const kiwixLink = document.querySelector('.links a[href^="http://localhost:8888"]');
+  const kiwixLink = document.querySelector(
+    '.links a[href^="http://localhost:8888"]',
+  );
   if (kiwixLink) kiwixLink.href = `http://${HOST}:8888`;
 
   // Set Calibre link (books)
-  const calibreLink = document.querySelector('.links a[href^="http://localhost:8083"]');
+  const calibreLink = document.querySelector(
+    '.links a[href^="http://localhost:8083"]',
+  );
   if (calibreLink) calibreLink.href = `http://${HOST}:8083`;
-
 });
 
 searchInput.addEventListener("input", () => {
   clearTimeout(debounceTimer);
   currentPage = 1;
-  debounceTimer = setTimeout(doSearch, 500);
+  debounceTimer = setTimeout(searchVault, 500);
 });
 
-async function doSearch() {
-  const query = searchInput.value.trim();
-  if (!query) {
-    resultsDiv.innerHTML = "";
-    countDiv.innerHTML = "";
-    paginationDiv.innerHTML = "";
-    document.getElementById("top-sources").innerHTML = "";
-    return;
-  }
-  const offset = (currentPage - 1) * perPage;
+function clearResults(msg = "") {
+  resultsDiv.innerHTML = msg;
+  countDiv.innerHTML = "";
+  paginationDiv.innerHTML = "";
+  document.getElementById("top-sources").innerHTML = "";
+};
+
+async function fetchResults(query) {
   const body = {
     q: query,
-    limit: perPage,
-    offset: offset,
+    limit: limit,
+    offset: (currentPage - 1) * limit,
     attributesToHighlight: ["title", "content"],
     highlightPreTag: "<mark>",
     highlightPostTag: "</mark>",
@@ -46,25 +63,55 @@ async function doSearch() {
   if (activeFilter !== "all") {
     body.filter = `type = "${activeFilter}"`;
   }
+
   const res = await fetch(`http://${HOST}:7700/indexes/vault/search`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = await res.json();
-  const totalHits = data.estimatedTotalHits || 0;
-  const totalPages = Math.ceil(totalHits / perPage);
-  resultsDiv.innerHTML = "";
-  if (data.hits.length === 0) {
-    resultsDiv.innerHTML = "<p>No results found.</p>";
-    countDiv.innerHTML = "";
-    paginationDiv.innerHTML = "";
-    document.getElementById("top-sources").innerHTML = "";
+  return await res.json();
+};
+
+function buildPagination(totalPages) {
+  let paginationHtml = "";
+  if (totalPages > 1) {
+    if (currentPage > 1) {
+      paginationHtml += `<button onclick="goToPage(${currentPage - 1})">← Prev</button>`;
+    }
+    let startPage = Math.max(1, currentPage - 3);
+    let endPage = Math.min(totalPages, currentPage + 3);
+    if (startPage > 1)
+      paginationHtml += `<button onclick="goToPage(1)">1</button><span class="dots">…</span>`;
+    for (let i = startPage; i <= endPage; i++) {
+      paginationHtml += `<button onclick="goToPage(${i})" class="${i === currentPage ? "active" : ""}">${i}</button>`;
+    }
+    if (endPage < totalPages)
+      paginationHtml += `<span class="dots">…</span><button onclick="goToPage(${totalPages})">${totalPages}</button>`;
+    if (currentPage < totalPages) {
+      paginationHtml += `<button onclick="goToPage(${currentPage + 1})">Next →</button>`;
+    }
+  }
+  paginationDiv.innerHTML = paginationHtml;
+};
+
+async function searchVault() {
+  const query = searchInput.value.trim();
+  if (!query) {
+    clearResults();
     return;
   }
+
+  const data = await fetchResults(query);
+
+  const totalHits = data.estimatedTotalHits || 0;
+  const totalPages = Math.ceil(totalHits / limit);
+  if (data.hits.length === 0) {
+    clearResults("<p>No results found.</p>");
+    return;
+  }
+
   data.hits.forEach((hit) => {
-    const h = hit._formatted || hit;
-    const url = hit.url.replace('localhost', HOST);
+    const url = hit.url.replace("localhost", HOST);
     const tagClass = "tag-" + (hit.type || "file");
     const tagLabel = hit.type || "file";
 
@@ -104,33 +151,15 @@ async function doSearch() {
 
     resultsDiv.appendChild(div);
   });
-  // Build pagination
-  let paginationHtml = "";
-  if (totalPages > 1) {
-    if (currentPage > 1) {
-      paginationHtml += `<button onclick="goToPage(${currentPage - 1})">← Prev</button>`;
-    }
-    let startPage = Math.max(1, currentPage - 3);
-    let endPage = Math.min(totalPages, currentPage + 3);
-    if (startPage > 1)
-      paginationHtml += `<button onclick="goToPage(1)">1</button><span class="dots">…</span>`;
-    for (let i = startPage; i <= endPage; i++) {
-      paginationHtml += `<button onclick="goToPage(${i})" class="${i === currentPage ? "active" : ""}">${i}</button>`;
-    }
-    if (endPage < totalPages)
-      paginationHtml += `<span class="dots">…</span><button onclick="goToPage(${totalPages})">${totalPages}</button>`;
-    if (currentPage < totalPages) {
-      paginationHtml += `<button onclick="goToPage(${currentPage + 1})">Next →</button>`;
-    }
-  }
-  paginationDiv.innerHTML = paginationHtml;
+
+  buildPagination(totalPages);
   renderTopSources(data.hits);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function goToPage(page) {
   currentPage = page;
-  doSearch();
+  searchVault();
 }
 
 function setFilter(type) {
@@ -139,23 +168,24 @@ function setFilter(type) {
   document.querySelectorAll(".filter").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.type === type);
   });
-  doSearch();
+  searchVault();
 }
 
 function highlightText(text, query) {
-  const stopWords = ["the", "a", "an", "is", "are", "was", "were", "of", "in", "to", "for", "and", "or", "on"];
   if (!query || !text) return text;
   const words = query.split(/\s+/).filter((w) => w.length > 1);
   const el = document.createElement("span");
   el.textContent = text;
   let html = el.innerHTML;
-  words.filter((w) => !stopWords.includes(w)).forEach((word) => {
-    const regex = new RegExp(
-      "(" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")",
-      "gi",
-    );
-    html = html.replace(regex, "<mark>$1</mark>");
-  });
+  words
+    .filter((w) => !stopWords.includes(w))
+    .forEach((word) => {
+      const regex = new RegExp(
+        "(" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")",
+        "gi",
+      );
+      html = html.replace(regex, "<mark>$1</mark>");
+    });
   return html;
 }
 
@@ -169,7 +199,7 @@ function renderTopSources(hits) {
   const sourceCounts = {};
   hits.forEach((hit) => {
     let key, title, url, type;
-    url = hit.url.replace('localhost', HOST);
+    url = hit.url.replace("localhost", HOST);
     if (hit.type === "book") {
       title = hit.title.replace(/ — Page \d+$/, "");
       key = title;
@@ -191,7 +221,7 @@ function renderTopSources(hits) {
     }
     sourceCounts[key].count++;
   });
-  const sorted = Object.values(sourceCounts).sort((a, b) => b.count - a.count)
+  const sorted = Object.values(sourceCounts).sort((a, b) => b.count - a.count);
   if (sorted.length === 0) {
     topSourcesDiv.innerHTML = "";
     return;
