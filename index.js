@@ -36,6 +36,12 @@ window.addEventListener("DOMContentLoaded", () => {
     '.links a[href^="http://localhost:8083"]',
   );
   if (calibreLink) calibreLink.href = `http://${HOST}:8083`;
+
+  // Set Jellyfin link (media)
+  const jellyfinLink = document.querySelector(
+    '.links a[href^="http://localhost:8096"]',
+  );
+  if (jellyfinLink) jellyfinLink.href = `http://${HOST}:8096`;
 });
 
 searchInput.addEventListener("input", () => {
