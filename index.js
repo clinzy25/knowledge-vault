@@ -116,6 +116,8 @@ async function searchVault() {
     return;
   }
 
+  resultsDiv.innerHTML = "";
+
   data.hits.forEach((hit) => {
     const url = hit.url.replace("localhost", HOST);
     const tagClass = "tag-" + (hit.type || "file");
