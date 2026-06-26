@@ -45,8 +45,6 @@ cleanup() {
 trap cleanup INT
 sleep 3
 
-sudo mount /dev/sda $VAULT_PATH
-
 # Start Kiwix
 kiwix-serve --port 8888 --address $BIND $VAULT_PATH/zim/*.zim &
 KIWIX_PID=$!
