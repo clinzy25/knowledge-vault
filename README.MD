@@ -1,11 +1,13 @@
 # Knowledge Vault
 
-Knowledge Vault is a self-hosted landing page for offline knowledge. It starts Kiwix, Calibre-Web, MeiliSearch, and Jellyfin from a single script, then gives you one search box to find content across wikis, books, and local files. No internet required.
+Knowledge Vault is a self-hosted landing page for offline knowledge. It starts Kiwix, Calibre-Web, MeiliSearch, and Jellyfin from a single script, then gives you one search box to find content across wikis, books, and local files. No internet required. The server can be easily exposed to your local network for wireless access.
+
+This repo is highly adapted for Debian Linux. If you would like to add support for other OS, please open a PR. 
 
 ![](readme-gif.gif)
 
 
-## Services
+# Services
 | Service      | Port | Purpose                         |
 | ------------ | ---- | ------------------------------- |
 | Landing page | 5500 | Search UI                       |
@@ -14,7 +16,7 @@ Knowledge Vault is a self-hosted landing page for offline knowledge. It starts K
 | MeiliSearch  | 7700 | Full-text search index          |
 | Jellyfin     | 8096 | Media server                    |
 
-## Data
+# Data
 You must prepare your own drive and add your own data. This repo expects a directory with the following structure:
 
 /root  
@@ -26,7 +28,7 @@ You must prepare your own drive and add your own data. This repo expects a direc
 - Add pdf files to the `pdf` folder.
 - Add media to the media folder. More info on Jellyfin setup later.
 
-## Hardware
+# Hardware
 You can run the servers and store the data on the same machine, but if you require more space, use a separate drive for the data. If you choose, you can make the data portable. Use a portable hard drive or a multi-drive enclosure like [this](https://www.newegg.com/wavlink-rapidfire-h4-k35284a-4-bay-ssd-enclosure-for-2-5-3-5-inch-sata-drive/p/0VN-0069-00056?item=9SIA6PFKK50098) for more storage space. In this configuration, each system you plug the drive into should have the source code installed.
 
 # Installation
