@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+
+    <title>Knowledge Vault</title>
+    <link rel="stylesheet" href="index.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <h1>Knowledge Vault</h1>
+    <div class="links">
+      <h2>Browse</h2>
+      <a href="http://localhost:8888" target="_blank">Kiwix (Wikis)</a>
+      <a href="http://localhost:8083" target="_blank">Calibre (Books)</a>
+      <a href="https://linzyfin.com" target="_blank">Jellyfin (Media)</a>
+      <a href="#" target="_blank">Maps</a>
+    </div>
+    <h2>Search</h2>
+    <input
+      type="text"
+      id="search"
+      placeholder="Search everything..."
+      autofocus
+    />
+    <div id="filters">
+      <button
+        class="filter filter-all active"
+        data-type="all"
+        onclick="setFilter('all')"
+      >
+        All
+      </button>
+      <button
+        class="filter filter-wiki"
+        data-type="wiki"
+        onclick="setFilter('wiki')"
+      >
+        Wiki
+      </button>
+      <button
+        class="filter filter-book"
+        data-type="book"
+        onclick="setFilter('book')"
+      >
+        Books
+      </button>
+      <button
+        class="filter filter-file"
+        data-type="file"
+        onclick="setFilter('file')"
+      >
+        Files
+      </button>
+    </div>
+    <div class="count" id="count"></div>
+    <div id="results"></div>
+    <div id="pagination"></div>
+    <div id="top-sources"></div>
+    <footer>
+      <h3>!IMPORTANT! Before unplugging drive</h3>
+      <p>Run <code>stop vault</code> or <code>sudo systemctl stop vault-start.service</code></p>
+      <h3>Get More Content</h3>
+      <ul>
+        <li><a href="https://download.kiwix.org/zim/" target="_blank">Kiwix ZIMs</a></li>
+        <li>
+          <a href="https://www.gutenberg.org/" target="_blank"
+            >Project Gutenberg</a
+          >
+        </li>
+        <li><a href="https://oceanofpdf.com/" target="_blank">OceanofPDF</a></li>
+      </ul>
+    </footer>
+
+    <script src="index.js"></script>
+  </body>
+</html>
