@@ -2,6 +2,11 @@
 
 Knowledge Vault is a self-hosted landing page for offline knowledge. It starts Kiwix, Calibre-Web, MeiliSearch, and Jellyfin from a single script, then gives you one search box to find content across wikis, books, and local files. No internet required.
 
+<p align="center">
+  <video src="readme-gif.webm" autoplay loop muted playsinline style="max-width:100%; height:auto; border-radius:8px; box-shadow:0 2px 16px #0002;" alt="Knowledge Vault demo"></video>
+</p>
+
+
 ## Services
 | Service      | Port | Purpose                         |
 | ------------ | ---- | ------------------------------- |
